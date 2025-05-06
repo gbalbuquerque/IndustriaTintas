@@ -21,3 +21,5 @@ Uma indústria de produção em massa de tintas, nos contratou para modernizar s
 ## 🚀 Diagrama de Casos de Uso
 
 Este diagrama mostra as principais funcionalidades do sistema e como os diferentes atores interagem com ele:
+
+<img src='./assets/UseCases.png'>
