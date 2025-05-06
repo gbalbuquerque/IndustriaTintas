@@ -23,3 +23,56 @@ Uma indústria de produção em massa de tintas, nos contratou para modernizar s
 Este diagrama mostra as principais funcionalidades do sistema e como os diferentes atores interagem com ele:
 
 <img src='./assets/useCases.png'>
+
+## 📝 Casos de Uso Detalhados
+
+Abaixo, detalhamos cada caso de uso, mostrando o fluxo principal, fluxos alternativos, pré-condições e pós-condições.
+
+### UC_01 - Monitorar Operação
+
+<details>
+<summary>Clique para expandir</summary>
+<img src="./assets/casosDetalhados/uc_01.png" alt="UC_01 - Monitorar Operação">
+</details>
+
+### UC_02 - Reverter Operação
+
+<details>
+<summary>Clique para expandir</summary>
+<img src="./assets/casosDetalhados/uc_02.png" alt="UC_02 - Reverter Operação">
+</details>
+
+### UC_03 - Liberar Caminhões
+
+<details>
+<summary>Clique para expandir</summary>
+<img src="./assets/casosDetalhados/uc_03.png" alt="UC_03 - Liberar Caminhões">
+</details>
+
+### UC_04 - Gerar Relatórios
+
+<details>
+<summary>Clique para expandir</summary>
+<img src="./assets/casosDetalhados/uc_04.png" alt="UC_04 - Gerar Relatórios">
+</details>
+
+### UC_05 - Informar demanda de Produção
+
+<details>
+<summary>Clique para expandir</summary>
+<img src="./assets/casosDetalhados/uc_05.png" alt="UC_05 - Informar demanda de Produção">
+</details>
+
+### UC_06 - UC_06 - Enviar ordens de produção
+
+<details>
+<summary>Clique para expandir</summary>
+<img src="./assets/casosDetalhados/uc_06.png" alt="UC_06 - Enviar ordens de produção">
+</details>
+
+### UC_07 - Enviar dados de produção
+
+<details>
+<summary>Clique para expandir</summary>
+<img src="./assets/casosDetalhados/uc_07.png" alt="UC_07 - Enviar dados de produção">
+</details>
