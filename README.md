@@ -83,8 +83,6 @@ Abaixo, detalhamos cada caso de uso, mostrando o fluxo principal, fluxos alterna
 
 classDiagram
 
-classDiagram
-
 
     class Pessoa {
         String nome
