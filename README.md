@@ -32,49 +32,49 @@ Abaixo, detalhamos cada caso de uso, mostrando o fluxo principal, fluxos alterna
 
 <details>
 <summary>Clique para expandir</summary>
-<img src="./assets/casosDetalhados/uc_01.png" alt="UC_01 - Monitorar Operação">
+<img src="./assets/casosDetalhados/uc_01.png">
 </details>
 
 ### UC_02 - Reverter Operação
 
 <details>
 <summary>Clique para expandir</summary>
-<img src="./assets/casosDetalhados/uc_02.png" alt="UC_02 - Reverter Operação">
+<img src="./assets/casosDetalhados/uc_02.png">
 </details>
 
 ### UC_03 - Liberar Caminhões
 
 <details>
 <summary>Clique para expandir</summary>
-<img src="./assets/casosDetalhados/uc_03.png" alt="UC_03 - Liberar Caminhões">
+<img src="./assets/casosDetalhados/uc_03.png" >
 </details>
 
 ### UC_04 - Gerar Relatórios
 
 <details>
 <summary>Clique para expandir</summary>
-<img src="./assets/casosDetalhados/uc_04.png" alt="UC_04 - Gerar Relatórios">
+<img src="./assets/casosDetalhados/uc_04.png" >
 </details>
 
 ### UC_05 - Informar demanda de Produção
 
 <details>
 <summary>Clique para expandir</summary>
-<img src="./assets/casosDetalhados/uc_05.png" alt="UC_05 - Informar demanda de Produção">
+<img src="./assets/casosDetalhados/uc_05.png" >
 </details>
 
 ### UC_06 - UC_06 - Enviar ordens de produção
 
 <details>
 <summary>Clique para expandir</summary>
-<img src="./assets/casosDetalhados/uc_06.png" alt="UC_06 - Enviar ordens de produção">
+<img src="./assets/casosDetalhados/uc_06.png">
 </details>
 
 ### UC_07 - Enviar dados de produção
 
 <details>
 <summary>Clique para expandir</summary>
-<img src="./assets/casosDetalhados/uc_07.png" alt="UC_07 - Enviar dados de produção">
+<img src="./assets/casosDetalhados/uc_07.png">
 </details>
 
 ## 🧮 Diagrama de Classes
