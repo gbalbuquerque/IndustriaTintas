@@ -390,3 +390,290 @@ sequenceDiagram
         end
     end
 ```
+### 1️⃣ Operador
+```mermaid
+stateDiagram-v2
+
+    [*] --> AguardandoAcessoDoOperador
+    AguardandoAcessoDoOperador --> ExibindoTelaDeLogin : [tentativa de acesso]
+    ExibindoTelaDeLogin --> ValidandoCredenciaisComSistema : [credenciais fornecidas]
+    ValidandoCredenciaisComSistema --> ExibindoPainelDeMonitoramento : [login OK, dados carregados do Sistema Controle]
+    ExibindoPainelDeMonitoramento --> RecebendoComandoDoOperador : [Operador interage reverter, liberar, gerar relatório, etc.]
+    ExibindoPainelDeMonitoramento --> AtualizandoPainelComNovosDadosDeSensor : [Sistema Controle envia atualização]
+    ExibindoPainelDeMonitoramento --> ExibindoAlertaDeSistema : [Sistema Controle envia alerta]
+
+    RecebendoComandoDoOperador --> EnviandoSolicitacaoAoSistemaControle : [ex solicitarReversao, liberarTanque, gerarRelatorio]
+    EnviandoSolicitacaoAoSistemaControle --> ExibindoRespostaDoSistemaControle : [confirmação, erro, dados de relatório]
+    ExibindoRespostaDoSistemaControle --> ExibindoPainelDeMonitoramento : [interação concluída]
+
+    AtualizandoPainelComNovosDadosDeSensor --> ExibindoPainelDeMonitoramento
+    ExibindoAlertaDeSistema --> ExibindoPainelDeMonitoramento : [após reconhecimento ou ação]
+    ExibindoPainelDeMonitoramento --> [*] : [logout ou fim da sessão]
+```
+### 2️⃣ Sistema PCP
+```mermaid
+stateDiagram-v2
+    [*] --> IdentificandoNecessidadeDeProducaoDeTinta
+    IdentificandoNecessidadeDeProducaoDeTinta --> CompilandoDadosDaOrdem : [Produto, Quantidade, Especificações, Prazo]
+    CompilandoDadosDaOrdem --> FormatandoRequisicaoParaSistemaDeControleTintas
+    FormatandoRequisicaoParaSistemaDeControleTintas --> EnviandoOrdemViaAPIDoSistemaDeControleTintas
+    EnviandoOrdemViaAPIDoSistemaDeControleTintas --> AguardandoConfirmacaoDeRecebimentoDaOrdem
+    AguardandoConfirmacaoDeRecebimentoDaOrdem --> RegistrandoConfirmacaoOuFalhaDoEnvio : [Resposta da API recebida]
+    RegistrandoConfirmacaoOuFalhaDoEnvio --> [*] : [Processo de envio de ordem concluído]
+```
+### 3️⃣ Central de Monitoramento
+```mermaid
+stateDiagram-v2
+
+    [*] --> ApresentandoInterfaceDeLogin
+    ApresentandoInterfaceDeLogin --> ValidandoAutenticacaoComSistemaControle : [Operador insere credenciais]
+    ValidandoAutenticacaoComSistemaControle --> ExibindoPainelOperacionalPrincipal : [Autenticação OK]
+    ValidandoAutenticacaoComSistemaControle --> ApresentandoInterfaceDeLogin : [Falha na autenticação]
+
+    ExibindoPainelOperacionalPrincipal --> RecebendoAcaoDoOperador : [Operador interage com o painel]
+    ExibindoPainelOperacionalPrincipal --> AtualizandoDisplayComNovosDados : [Dados/alertas chegam do Sistema Controle]
+
+    RecebendoAcaoDoOperador --> EnviandoComandoParaSistemaControle : [Ação requer processamento pelo backend]
+    EnviandoComandoParaSistemaControle --> ExibindoRespostaDoSistemaNoPainel : [Sistema Controle responde ao comando]
+    ExibindoRespostaDoSistemaNoPainel --> ExibindoPainelOperacionalPrincipal : [Interação concluída]
+
+    AtualizandoDisplayComNovosDados --> ExibindoPainelOperacionalPrincipal : [Painel atualizado]
+
+    ExibindoPainelOperacionalPrincipal --> [*] : [Logout ou fim de sessão]
+```
+### 4️⃣ Sistema Comercial
+```mermaid
+stateDiagram-v2
+    [*] --> PreparandoEnvioDeDemanda
+    PreparandoEnvioDeDemanda --> EnviandoRequisicaoParaAPIGateway : [dados da demanda produto, qtd, prazo]
+    EnviandoRequisicaoParaAPIGateway --> AguardandoRespostaDaAPIDoSistemaTintas
+    AguardandoRespostaDaAPIDoSistemaTintas --> RecebendoConfirmacaoOuErro : [resposta da API]
+    RecebendoConfirmacaoOuErro --> ProcessoDeEnvioConcluido : [demanda registrada ou falha comunicada]
+    ProcessoDeEnvioConcluido --> [*]
+```
+### 5️⃣ Sistema Controle Tintas
+```mermaid
+stateDiagram-v2
+    [*] --> Ocioso_AguardandoEntrada
+
+    Ocioso_AguardandoEntrada --> RecebendoDadosExternos : [Nova ordem do PCP/Comercial (UC_05) ou Dados de Sensores (UC_07)]
+    Ocioso_AguardandoEntrada --> RecebendoComandoDaCentralMonitoramento : [Operador solicita ação via UI (UC_01, UC_02, UC_03, UC_04, Seq. Iniciar Prod.)]
+
+    RecebendoDadosExternos --> ProcessandoDadosRecebidos : [Validar ordem, registrar dados de sensor]
+    ProcessandoDadosRecebidos --> AtualizandoEstadoInterno_E_NotificandoUI : [Ordem na fila, painel atualizado com dados de sensor]
+    AtualizandoEstadoInterno_E_NotificandoUI --> Ocioso_AguardandoEntrada
+
+    RecebendoComandoDaCentralMonitoramento --> ValidandoEProcessandoComandoOperador : [Verificar permissões, estado da linha]
+    ValidandoEProcessandoComandoOperador --> ExecutandoAcaoRequisitada : [Iniciar/Parar produção, abrir/fechar válvula, gerar dados de relatório]
+    ExecutandoAcaoRequisitada --> EnviandoRespostaOuConfirmacaoParaCentralMonitoramento
+    EnviandoRespostaOuConfirmacaoParaCentralMonitoramento --> Ocioso_AguardandoEntrada : [Comando concluído]
+
+    Ocioso_AguardandoEntrada --> [*] : [Desligamento do sistema, não usual]
+```
+
+### 6️⃣ Módulo Interface Sensores
+```mermaid
+stateDiagram-v2
+    [*] --> RecebendoDadoBrutoDoHardwareSensor
+    RecebendoDadoBrutoDoHardwareSensor --> ProcessandoDadoBrutoSensor : [validação, conversão, etc.]
+    ProcessandoDadoBrutoSensor --> ReportandoDadoProcessadoAoSistemaControle : [dado válido]
+    ProcessandoDadoBrutoSensor --> ReportandoFalhaDeLeituraAoSistemaControle : [erro na leitura/processamento]
+    ReportandoDadoProcessadoAoSistemaControle --> AguardandoProximoCicloDeLeitura
+    ReportandoFalhaDeLeituraAoSistemaControle --> AguardandoProximoCicloDeLeitura
+    AguardandoProximoCicloDeLeitura --> [*]
+```
+## 🎱 Diagramas de Atividades
+### Interface de Produção
+```mermaid
+graph TD
+    start([Início - Nova Ordem de Produção])
+
+    subgraph "Sistema PCP"
+        pcpA1[Gera Ordem de Produção - produto, quantidade]
+        pcpA2[Envia Ordem para Sistema de Controle de Tintas]
+    end
+
+    subgraph "Operador (Central de Monitoramento)"
+        opB1[Visualiza Ordem Pendente no painel]
+        opB2[Verifica disponibilidade de matéria-prima e linha]
+        opB3[Seleciona Ordem e Inicia Produção via Central]
+        opB4[Monitora processo - níveis, pressões, status equipamentos]
+        opB5{"Intervenção Necessária?"}
+        opB6[Realiza ajuste manual ou aciona parada de emergência]
+        opB7[Confirma conclusão do lote no painel]
+    end
+
+    subgraph "Sistema de Controle da Linha de Tintas"
+        sysC1[Recebe Ordem do PCP e registra]
+        sysC2[Notifica Operador sobre nova Ordem via Central]
+        sysC3[Recebe comando de Início de Produção da Central]
+        sysC4[Carrega receita e parâmetros da Ordem]
+        sysC5[Comanda dosagem de bases - bombas B1/B2, válvulas V1/V2]
+        sysC6[Monitora sensores de dosagem de bases]
+        sysC7[Comanda dosagem de corantes - válvulas V3-V8]
+        sysC8[Monitora sensores de dosagem de corantes]
+        sysC9[Comanda mistura em M1/M2]
+        sysC10[Monitora processo de mistura]
+        sysC11[Comanda transferência para Tanque Armazenamento E7-E13 via V9-V16]
+        sysC12[Monitora nível do tanque de destino]
+        sysC13[Registra lote como concluído e atualiza status]
+        sysC14[Notifica Operador sobre conclusão via Central]
+        sysC15[Processa comandos de intervenção do Operador]
+    end
+
+    start --> pcpA1
+    pcpA1 --> pcpA2
+    pcpA2 --> sysC1
+    sysC1 --> sysC2
+    sysC2 --> opB1
+    opB1 --> opB2
+    opB2 --> opB3
+    opB3 --> sysC3
+    sysC3 --> sysC4
+    sysC4 --> sysC5
+    sysC5 --> sysC6
+    sysC6 --> sysC7
+    sysC7 --> sysC8
+    sysC8 --> sysC9
+    sysC9 --> sysC10
+    sysC10 --> sysC11
+    sysC11 --> sysC12
+    sysC12 --> opB4
+    opB4 --> opB5
+    opB5 -- Sim --> opB6
+    opB6 --> sysC15
+    sysC15 --> opB4
+    opB5 -- Não --> sysC13
+    sysC13 --> sysC14
+    sysC14 --> opB7
+    opB7 --> end_producao([Fim - Lote Produzido])
+```
+### Processo de esvaziation
+```mermaid
+graph TD
+    start_esvaziamento([Início - Necessidade de Esvaziar Tanque])
+
+    subgraph "Operador (Central de Monitoramento)"
+        opD1[Identifica Tanque com produto pronto para esvaziar]
+        opD2[Verifica se caminhão está posicionado/disponível]
+        opD3[Comanda Liberação do Tanque para Esvaziamento via Central]
+        opD4[Monitora nível do tanque durante esvaziamento]
+        opD5[Confirma finalização do esvaziamento ou interrupção]
+    end
+
+    subgraph "Sistema de Controle da Linha de Tintas"
+        sysE1[Recebe comando de Liberação de Tanque da Central]
+        sysE2[Verifica status do tanque - nível, tipo de produto]
+        sysE3[Comanda abertura da válvula de saída do tanque selecionado]
+        sysE4[Envia dados de nível do tanque para Central de Monitoramento]
+        sysE5{"Tanque Vazio ou Caminhão Cheio?"}
+        sysE6[Comanda fechamento da válvula de saída do tanque]
+        sysE7[Registra esvaziamento e atualiza status do tanque]
+        sysE8[Notifica Central sobre finalização/status]
+    end
+
+    subgraph "Logística/Caminhão (Entidade Externa)"
+        logF1[Caminhão se posiciona para carregamento]
+        logF2[Inicia recebimento de tinta]
+        logF3[Sinaliza que está cheio ou que o tanque esvaziou]
+    end
+
+    start_esvaziamento --> opD1
+    opD1 --> opD2
+    opD2 --> logF1
+    logF1 --> opD3
+    opD3 --> sysE1
+    sysE1 --> sysE2
+    sysE2 --> sysE3
+    sysE3 --> logF2
+    logF2 --> opD4
+    sysE3 --> sysE4
+    sysE4 --> opD4
+    opD4 --> sysE5
+    sysE5 -- Sim --> sysE6
+    sysE6 --> sysE7
+    sysE7 --> sysE8
+    sysE8 --> opD5
+    logF3 --> opD5
+    opD5 --> end_esvaziado([Fim - Esvaziamento Concluído/Interrompido])
+```
+
+## 🖥️ Diagramas de Componentes e Integração
+```mermaid
+graph TD
+    subgraph "Sistema de Controle da Linha de Tintas - Componentes"
+        %% Aplicações de Interface
+        CentralMonitoramento_UI[<<application>><br>Interface Central Monitoramento<br>Desktop App / Web App]
+
+        %% Núcleo do Sistema de Controle (Backend)
+        subgraph "<<service>> ServicoControleTintas.jar/.war"
+            direction LR
+            APIGestaoOrdens[API Gestão de Ordens]
+            MotorControleProcesso[Motor de Controle de Processo]
+            LogicaReceitasFormulas[Lógica de Receitas e Fórmulas]
+            ModuloRelatorios[Módulo de Geração de Relatórios]
+            ModuloSegurancaAlarmes[Módulo de Segurança e Alarmes]
+        end
+
+        %% Componentes de Integração e Drivers
+        IntegracaoPCP_Comercial[<<component>><br>Adaptador API PCP/Comercial]
+        DriverComunicacaoCLP[<<component>><br>Driver Comunicação CLP<br>OPC UA, Modbus, etc.]
+
+        %% Persistência
+        BancoDeDadosProducao[<<database>><br>BD Produção Tintas<br>Ordens, Receitas, Logs, Estoque]
+
+        %% Dependências Internas
+        CentralMonitoramento_UI --> APIGestaoOrdens
+        CentralMonitoramento_UI --> MotorControleProcesso
+        %% Para comandos manuais e visualização
+        CentralMonitoramento_UI --> ModuloRelatorios
+        CentralMonitoramento_UI --> ModuloSegurancaAlarmes
+
+        APIGestaoOrdens --> LogicaReceitasFormulas
+        APIGestaoOrdens --> MotorControleProcesso
+        APIGestaoOrdens --> BancoDeDadosProducao
+
+        MotorControleProcesso --> LogicaReceitasFormulas
+        MotorControleProcesso --> DriverComunicacaoCLP
+        %% Comanda os CLPs
+        MotorControleProcesso --> ModuloSegurancaAlarmes
+        MotorControleProcesso --> BancoDeDadosProducao
+        %% Para log de eventos de processo
+
+        LogicaReceitasFormulas --> BancoDeDadosProducao
+        ModuloRelatorios --> BancoDeDadosProducao
+        ModuloSegurancaAlarmes --> BancoDeDadosProducao
+        ModuloSegurancaAlarmes --> MotorControleProcesso
+        %% Pode enviar comandos de parada
+
+        %% Dependências com Interfaces Externas
+        APIGestaoOrdens --> IntegracaoPCP_Comercial
+        %% Para receber ordens e talvez enviar status
+
+    end
+
+    %% Sistemas Externos
+    CLPs_LinhaProducao("<<hardware>><br>CLPs da Linha de Produção")
+    SistemaPCP_Externo("<<external_system>><br>Sistema PCP/Comercial")
+    SensoresAtuadores("<<hardware>><br>Sensores e Atuadores da Linha")
+
+    %% Conexões com Sistemas Externos
+    DriverComunicacaoCLP -.-> CLPs_LinhaProducao
+    IntegracaoPCP_Comercial -.-> SistemaPCP_Externo
+    CLPs_LinhaProducao -.-> SensoresAtuadores
+    %% CLPs leem sensores e comandam atuadores
+```
+## 🛠️ Tecnologias
+
+*   **Diagramas:** ![Draw.io](https://img.shields.io/badge/draw.io-diagrams.net-orange?logo=drawio&logoColor=white)
+*   **Diagramas de Caso de Uso:** ![Excel](https://img.shields.io/badge/Microsoft_Excel-217346?logo=microsoft-excel&logoColor=white)
+*   **Diagramas de Classes:** ![Mermaid](https://img.shields.io/badge/Mermaid-Diagram-blue?logo=mermaid&logoColor=white)
+*   **Diagrama de Sequência:** ![Mermaid](https://img.shields.io/badge/Mermaid-Diagram-blue?logo=mermaid&logoColor=white)
+
+---
+
+## 🤝 Contribuições
+Contribuições para aprimorar este projeto são muito bem-vindas, forke o projeto e contribua!
+
+## ✉️ Contato
+Qualquer dúvida sobre o projeto entrar em contato, será um prazer!
