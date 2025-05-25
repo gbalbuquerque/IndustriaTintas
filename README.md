@@ -449,12 +449,6 @@ stateDiagram
 ```
 ### 9️⃣ Sensor
 
-stateDiagram-v2
-    [*] --> LerValor()
-    LerValor() --> [*] : "Valor normal"
-    LerValor() --> RetornaErro() : "Valor crítico"
-    RetornaErro() --> LerValor() : "Após normalização"
-
 ```mermaid
 stateDiagram
     [*] --> LerValor()
