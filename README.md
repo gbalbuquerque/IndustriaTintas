@@ -281,7 +281,7 @@ sequenceDiagram
         Sistema->>Caminhão: Inicia esvaziamento
         Caminhão->>Sistema: Confirma esvaziamento concluído
         Sistema->>Operador: Finaliza processo
-    else Caminhões indisponíveis [FS001]
+    else Caminhões indisponíveis
         Sistema->>Operador: Exibe alerta
     end
 
@@ -457,71 +457,9 @@ stateDiagram
     RetornaErro() --> LerValor() : "Após normalização"
 ```
 ## 🎱 Diagramas de Atividades
-### Interface de Produção
-```mermaid
-graph TD
-    start([Início - Nova Ordem de Produção])
+### Liberação de Caminhões
+<img src='Diagrama1Atv.png'>
 
-    subgraph "Sistema PCP"
-        pcpA1[Gera Ordem de Produção - produto, quantidade]
-        pcpA2[Envia Ordem para Sistema de Controle de Tintas]
-    end
-
-    subgraph "Operador (Central de Monitoramento)"
-        opB1[Visualiza Ordem Pendente no painel]
-        opB2[Verifica disponibilidade de matéria-prima e linha]
-        opB3[Seleciona Ordem e Inicia Produção via Central]
-        opB4[Monitora processo - níveis, pressões, status equipamentos]
-        opB5{"Intervenção Necessária?"}
-        opB6[Realiza ajuste manual ou aciona parada de emergência]
-        opB7[Confirma conclusão do lote no painel]
-    end
-
-    subgraph "Sistema de Controle da Linha de Tintas"
-        sysC1[Recebe Ordem do PCP e registra]
-        sysC2[Notifica Operador sobre nova Ordem via Central]
-        sysC3[Recebe comando de Início de Produção da Central]
-        sysC4[Carrega receita e parâmetros da Ordem]
-        sysC5[Comanda dosagem de bases - bombas B1/B2, válvulas V1/V2]
-        sysC6[Monitora sensores de dosagem de bases]
-        sysC7[Comanda dosagem de corantes - válvulas V3-V8]
-        sysC8[Monitora sensores de dosagem de corantes]
-        sysC9[Comanda mistura em M1/M2]
-        sysC10[Monitora processo de mistura]
-        sysC11[Comanda transferência para Tanque Armazenamento E7-E13 via V9-V16]
-        sysC12[Monitora nível do tanque de destino]
-        sysC13[Registra lote como concluído e atualiza status]
-        sysC14[Notifica Operador sobre conclusão via Central]
-        sysC15[Processa comandos de intervenção do Operador]
-    end
-
-    start --> pcpA1
-    pcpA1 --> pcpA2
-    pcpA2 --> sysC1
-    sysC1 --> sysC2
-    sysC2 --> opB1
-    opB1 --> opB2
-    opB2 --> opB3
-    opB3 --> sysC3
-    sysC3 --> sysC4
-    sysC4 --> sysC5
-    sysC5 --> sysC6
-    sysC6 --> sysC7
-    sysC7 --> sysC8
-    sysC8 --> sysC9
-    sysC9 --> sysC10
-    sysC10 --> sysC11
-    sysC11 --> sysC12
-    sysC12 --> opB4
-    opB4 --> opB5
-    opB5 -- Sim --> opB6
-    opB6 --> sysC15
-    sysC15 --> opB4
-    opB5 -- Não --> sysC13
-    sysC13 --> sysC14
-    sysC14 --> opB7
-    opB7 --> end_producao([Fim - Lote Produzido])
-```
 ### Processo de esvaziation
 ```mermaid
 graph TD
