@@ -187,234 +187,165 @@ classDiagram
 
 ```mermaid
 sequenceDiagram
-  actor Operador as Operador
-  participant UI_Central as "Interface da Central"
-  actor SistemaControle as "Sistema de Controle"
-  participant ModuloAutenticacao as "Módulo de Autenticação"
-  actor ModuloSensores as "Módulo de Sensores"
-  participant Equipamentos as "Válvulas, Bombas, etc."
 
-  Operador ->>+ UI_Central: Tenta acessar o sistema
-  UI_Central ->>+ ModuloAutenticacao: solicitarAutenticacao()
-  ModuloAutenticacao -->> UI_Central: pedeCredenciais()
-  UI_Central -->> Operador: Exibe tela de login
-  Operador ->> UI_Central: Fornece credenciais (usuário, senha)
-  UI_Central ->>+ ModuloAutenticacao: validarCredenciais(usuario, senha)
-  alt Credenciais Válidas
-    ModuloAutenticacao -->>- UI_Central: acessoPermitido(token)
-    UI_Central ->>+ SistemaControle: carregarPainelMonitoramento()
-    SistemaControle ->>+ ModuloSensores: obterStatusAtualEquipamentos()
-    ModuloSensores ->> Equipamentos: lerStatus()
-    Equipamentos -->> ModuloSensores: statusEquipamentos
-    ModuloSensores -->>- SistemaControle: dadosStatus(statusEquipamentos)
-    SistemaControle -->>- UI_Central: exibirPainelStatus(dadosStatus)
-    UI_Central -->>- Operador: Painel de monitoramento exibido
-    loop Atualização Contínua
-      ModuloSensores -->>+ SistemaControle: novosDadosSensor(tipo, valor, timestamp)
-      SistemaControle ->> SistemaControle: processarDadosSensor(dados)
-      SistemaControle -->> UI_Central: atualizarIndicadoresVisuais(dadosProcessados)
+
+actor Operador
+participant Central de Monitoramento
+participant Sistema
+participant Sensores
+
+Operador->>Sistema: Acessa sistema
+Sistema->>Operador: Solicita autenticação
+Operador->>Sistema: Fornece credenciais
+
+alt Credenciais válidas
+    Sistema->>Sistema: Valida acesso
+    Sistema->>Operador: Exibe painel de status
+
+    loop Atualização contínua
+        Sensores->>Sistema: Dados de pressão/nível
+        Sistema->>Central de Monitoramento: Encaminha dados
+        Sistema->>Operador: Atualiza indicadores
     end
-  else
-    Note right of ModuloAutenticacao: FS001: Credenciais Inválidas
-    ModuloAutenticacao -->>- UI_Central: acessoNegado()
-    UI_Central -->> Operador: Mensagem de erro: "Credenciais inválidas."
-  end
+else Credenciais inválidas 
+    Sistema->>Operador: Nega acesso
+    Sistema->>Operador: Exibe mensagem de erro
+end
+
+alt Falha na comunicação 
+    Sensores->>Sistema: Sem dados
+    Sistema->>Central de Monitoramento: Notifica falha
+    Sistema->>Operador: Exibe mensagem de alerta
+end
 ```
-### 2️⃣ Controle das Locações
+### 2️⃣ Reverter Operação
+
 ```mermaid
 sequenceDiagram
+    
     actor Operador
-    participant UI_Central as "Interface da Central"
-    actor CentralMonitoramento as "Central de Monitoramento"
-    participant ModuloOperacoes as "Módulo de Gerenciamento de Operações"
+    participant Central de Monitoramento
+    participant Sistema
 
-    Operador->>+UI_Central: Acessa painel de monitoramento
-    UI_Central-->>-Operador: Exibe operações em andamento
+    Operador->>Central de Monitoramento: Acessa painel
+    Central de Monitoramento->>Sistema: Solicita interface
+    Sistema->>Central de Monitoramento: Exibe operações em andamento
+    Central de Monitoramento->>Operador: Exibe interface
 
-    Operador->>+UI_Central: Seleciona operação (opID) para reverter
-    UI_Central->>+CentralMonitoramento: solicitarReversaoOperacao(opID)
+    Operador->>Sistema: Seleciona operação e solicita reversão
 
-    CentralMonitoramento->>+ModuloOperacoes: verificarEstagioOperacao(opID)
-    ModuloOperacoes-->>-CentralMonitoramento: estagioAtual(opID, estagio)
-
-    alt Operação já concluída ou em estágio irreversível (FS001)
-        Note right of CentralMonitoramento: Condição: estagio é irreversível
-        CentralMonitoramento-->>+UI_Central: erroReversao(opID, "Operação " + estagio + ", não pode ser revertida.")
-        UI_Central-->>-Operador: Exibe mensagem de alerta e retorna à tela principal
-    end
-
-    alt Operação pode ser revertida
-        Note right of CentralMonitoramento: Condição: estagio é reversível
-        CentralMonitoramento->>+ModuloOperacoes: iniciarParadaSegura(opID)
-        Note over ModuloOperacoes: Comandos para fechar válvulas, parar bombas, etc.
-        ModuloOperacoes-->>-CentralMonitoramento: paradaSeguraIniciada(opID)
-        CentralMonitoramento-->>+UI_Central: notificacaoParadaIniciada(opID, "Processo de reversão iniciado")
-
-        Note over CentralMonitoramento: CentralMonitoramento aguarda/monitora conclusão da parada.
-        CentralMonitoramento->>CentralMonitoramento: operacaoParadaConcluida(opID) // Lógica interna no CentralMonitoramento
-        SistemaControle-->>+UI_Central: confirmarReversaoFinalizada(opID)
-        UI_Central-->>-Operador: Exibe "Operação " + opID + " revertida com sucesso."
+    alt Operação em estágio reversível
+        Sistema->>Sistema: Verifica estágio da operação
+        Sistema->>Sistema: Inicia processo de parada segura
+        Sistema->>Operador: Confirma reversão finalizada
+    else Operação irreversível
+        Sistema->>Operador: Exibe mensagem de alerta
+        Operador->>Sistema: Retorna à tela principal
     end
 ```
 ### 3️⃣ Liberar Caminhões
 
 ```mermaid
 sequenceDiagram
-    actor Operador
-    participant UI_Central as "Interface da Central"
-    actor CentralMonitoramento as "Central de Monitoramento"
-    participant ModuloTanques as "Módulo de Gerenciamento de Tanques"
-    participant ModuloLogistica as "Módulo de Logística/Caminhões"
+   actor Operador
+    participant Central de Monitoramento
+    participant Sistema
+    participant Caminhão
 
-    Operador->>+UI_Central: Acessa painel de monitoramento
-    UI_Central->>+CentralMonitoramento: solicitarDadosTanques()
-    CentralMonitoramento->>+ModuloTanques: getNivelAtualTodosTanques()
-    ModuloTanques-->>-CentralMonitoramento: niveisTanques(listaDeNiveis)
-    CentralMonitoramento-->>+UI_Central: exibirNiveisTanques(listaDeNiveis) // Manter UI_Central ativo
-    UI_Central-->>-Operador: Exibe níveis atuais dos tanques
+    Operador->>Central de Monitoramento: Acessa sistema
+    Central de Monitoramento->>Sistema: Solicita dados dos tanques
+    Sistema->>Central de Monitoramento: Exibe níveis dos tanques
+    Central de Monitoramento->>Operador: Mostra níveis
 
-    Operador->>+UI_Central: Identifica tanque (tanqueID) e autoriza liberação de caminhão
-    UI_Central->>+CentralMonitoramento: autorizarLiberacaoCaminhao(tanqueID)
+    Operador->>Sistema: Identifica tanques próximos do limite
+    Operador->>Sistema: Autoriza liberação do caminhão
 
     alt Caminhão disponível
-        Note right of CentralMonitoramento: Condição: ModuloLogistica.verificarDisponibilidadeCaminhao() == true
-        CentralMonitoramento->>+ModuloLogistica: verificarDisponibilidadeCaminhao()
-        ModuloLogistica-->>-CentralMonitoramento: caminhaoDisponivel = true
-        CentralMonitoramento->>+ModuloTanques: iniciarEsvaziamentoTanque(tanqueID)
-        Note over ModuloTanques: Abre válvula de saída do tanqueID
-        ModuloTanques-->>-CentralMonitoramento: esvaziamentoIniciado(tanqueID)
-        CentralMonitoramento->>+ModuloLogistica: notificarInicioEsvaziamento(tanqueID) // Informa logística
-        CentralMonitoramento-->>+UI_Central: notificacaoEsvaziamentoIniciado(tanqueID, "Esvaziamento iniciado.") // Informa UI
-        UI_Central-->>-Operador: Notifica "Esvaziamento do tanque " + tanqueID + " iniciado."
-
-        ModuloTanques-->>+CentralMonitoramento: eventoTanqueEsvaziado(tanqueID)
-        CentralMonitoramento->>+ModuloTanques: finalizarEsvaziamento(tanqueID)
-        Note over ModuloTanques: Fecha válvula de saída do tanqueID
-        ModuloTanques-->>-CentralMonitoramento: processoFinalizado(tanqueID)
-        CentralMonitoramento-->>+UI_Central: notificarFinalizacaoEsvaziamento(tanqueID)
-        UI_Central-->>-Operador: Exibe "Processo de esvaziamento do tanque " + tanqueID + " finalizado."
+        Sistema->>Caminhão: Inicia esvaziamento
+        Caminhão->>Sistema: Confirma esvaziamento concluído
+        Sistema->>Operador: Finaliza processo
+    else Caminhões indisponíveis [FS001]
+        Sistema->>Operador: Exibe alerta
     end
 
-    alt Caminhões indisponíveis (FS001)
-        Note right of CentralMonitoramento: Condição: ModuloLogistica.verificarDisponibilidadeCaminhao() == false
-
-        CentralMonitoramento->>+ModuloLogistica: verificarDisponibilidadeCaminhao()
-        ModuloLogistica-->>-CentralMonitoramento: caminhaoDisponivel = false
-        CentralMonitoramento-->>+UI_Central: alertaCaminhaoIndisponivel()
-        UI_Central-->>-Operador: Exibe alerta: "Caminhões indisponíveis no momento."
-    end
 ```
 ### 4️⃣ Gerar Relatório
 
 ```mermaid
 sequenceDiagram
+
     actor Operador
-    participant UI_Central as "Interface da Central"
-    participant ModuloRelatorios as "Módulo de Relatórios"
-    participant BancoDeDados as "Banco de Dados"
+    participant Sistema
+    participant Banco de Dados
 
-    Operador->>+UI_Central: Acessa módulo de relatórios
-    UI_Central-->>-Operador: Exibe opções de filtros e tipos de relatório
+    Operador->>Sistema: Acessa módulo de relatórios
+    Operador->>Sistema: Realiza consulta com filtros
 
-    Operador->>+UI_Central: Seleciona filtros (data, tipo de produto, etc.) e solicita relatório
-    UI_Central->>+ModuloRelatorios: gerarRelatorio(filtros)
-
-    ModuloRelatorios->>+BancoDeDados: consultarDadosProducao(filtros)
-    BancoDeDados-->>-ModuloRelatorios: dadosProducao(resultadoConsulta) // resultadoConsulta pode ser listaDeDados ou null
-
-    alt Dados encontrados para o relatório
-        Note right of ModuloRelatorios: Condição: resultadoConsulta não é nulo/vazio
-        ModuloRelatorios->>ModuloRelatorios: formatarRelatorio(resultadoConsulta) // Usa resultadoConsulta que contém listaDeDados
-        ModuloRelatorios-->>+UI_Central: exibirRelatorio(relatorioFormatado)
-        UI_Central-->>-Operador: Relatório exibido na tela
-
-        Operador->>+UI_Central: Solicita exportação (PDF/CSV)
-        UI_Central->>+ModuloRelatorios: exportarRelatorio(relatorioFormatado, formatoExportacao)
-        ModuloRelatorios-->>+UI_Central: arquivoExportado(linkDownloadOuArquivo)
-        UI_Central-->>-Operador: Fornece arquivo para download/salvamento
+    alt Filtros válidos
+        Sistema->>Banco de Dados: Consulta dados conforme filtros
+        Banco de Dados->>Sistema: Retorna dados
+        Sistema->>Operador: Exibe relatório
+        Operador->>Sistema: Solicita exportação em PDF/CSV
+        Sistema->>Operador: Disponibiliza arquivo para download
+    else [FS001] Filtros inválidos ou sem resultado
+        Sistema->>Operador: Exibe mensagem de que não há dados
     end
 
-    alt Sem dados para o filtro (FS001)
-        Note right of ModuloRelatorios: Condição: resultadoConsulta é nulo/vazio
-        ModuloRelatorios-->>+UI_Central: relatorioVazio("Nenhum dado encontrado para os filtros selecionados.")
-        UI_Central-->>-Operador: Exibe mensagem: "Nenhum dado encontrado."
-    end
 ```
 
 ### 5️⃣ Informar Demanda de Produção
 ```mermaid
 sequenceDiagram
-    actor SistemaComercial
-    participant APIGateway as "API Gateway / Interface Externa"
-    participant SistemaControle as "Sistema de Controle Tintas"
-    participant ModuloDemandas as "Módulo de Demandas"
-    participant UI_Central_Operador as "Interface do Operador"
 
-    SistemaComercial->>+APIGateway: POST /demanda (produto, quantidade, prazo)
-    APIGateway->>+SistemaControle: encaminharNovaDemanda(dadosDemanda)
-    SistemaControle->>+ModuloDemandas: registrarNovaDemanda(dadosDemanda)
-    ModuloDemandas->>ModuloDemandas: validarDadosDemanda()
-    ModuloDemandas->>ModuloDemandas: salvarDemandaNoBD()
-    ModuloDemandas-->>-SistemaControle: demandaRegistradaComSucesso(idDemanda)
-    SistemaControle-->>-APIGateway: respostaDemanda(status="Sucesso", idDemanda)
-    APIGateway-->>-SistemaComercial: HTTP 201 Created (idDemanda)
+    participant Sistema_Comercial
+    participant Sistema_de_Controle
+    participant Operador
 
-    SistemaControle->>UI_Central_Operador: notificarNovaDemandaPendente(idDemanda, detalhes)
-    Note over UI_Central_Operador: Operador é notificado da nova demanda.
+    Sistema_Comercial->>Sistema_Comercial: Identifica novo pedido de venda
+    Sistema_Comercial->>Sistema_de_Controle: Envia dados do pedido (produto, quantidade, prazo)
+    Sistema_de_Controle->>Sistema_de_Controle: Registra demanda de produção
+    Sistema_de_Controle->>Operador: Exibe notificação de nova demanda
+
 ```
 ### 6️⃣ Enviar Ordens de Produção
 ```mermaid
 sequenceDiagram
-    actor SistemaControleTintas
-    participant ModuloOrdensProducao_Tintas as "Módulo Ordens (Tintas)"
-    participant APIGateway_PCP as "Interface com Sistema PCP"
-    actor SistemaPCP_Externo as "Sistema PCP Externo"
 
-    Note over SistemaControleTintas, ModuloOrdensProducao_Tintas: Sistema agrupa demandas, define prioridades e gera dados da ordem.
+    participant Sistema_de_Controle
+    participant Sistema_PCP
 
-    SistemaControleTintas->>+ModuloOrdensProducao_Tintas: prepararOrdemParaEnvioPCP(dadosDemandaAgrupada)
-    ModuloOrdensProducao_Tintas->>ModuloOrdensProducao_Tintas: gerarOrdemProducao(lote, quantidade, paramsTecnicos)
-    ModuloOrdensProducao_Tintas-->>-SistemaControleTintas: ordemProntaParaEnvio(ordemPCP)
+    Sistema_de_Controle->>Sistema_de_Controle: Agrupa demandas por tipo e prioridade
+    Sistema_de_Controle->>Sistema_de_Controle: Gera ordem de produção (lote, quantidade, parâmetros técnicos)
+    Sistema_de_Controle->>Sistema_PCP: Envia ordem de produção
+    Sistema_PCP-->>Sistema_de_Controle: Confirma recebimento da ordem
 
-    SistemaControleTintas->>+APIGateway_PCP: POST /ordemProducao (ordemPCP)
-    APIGateway_PCP->>+SistemaPCP_Externo: receberNovaOrdemProducao(ordemPCP)
-    SistemaPCP_Externo->>SistemaPCP_Externo: processarOrdemRecebida()
-    SistemaPCP_Externo-->>-APIGateway_PCP: ackOrdemRecebida(idPCP_Ordem, status)
-    APIGateway_PCP-->>-SistemaControleTintas: confirmacaoEnvioOrdemPCP(idPCP_Ordem, status)
-
-    Note over SistemaControleTintas: Sistema de Tintas registra confirmação do PCP.
 ```
 ### 7️⃣ Enviar Dados de Produção
 ```mermaid
+
 sequenceDiagram
-    actor ModuloSensores as "Módulo Interface Sensores"
-    participant SistemaControle as "Sistema de Controle Tintas"
-    participant EquipamentosHardware as "Sensores Físicos (Pressão, Nível)"
-    participant UI_Central_Operador as "Interface do Operador"
-    participant BancoDeDados as "Banco de Dados"
 
-    loop Leitura Periódica / Event-driven
-        EquipamentosHardware-->>+ModuloSensores: enviaDadoBruto(idSensor, valor, timestamp)
-        ModuloSensores->>ModuloSensores: processarDadoBruto(dado)
+    participant Sensores
+    participant Sistema_de_Controle
+    participant Operador
 
-        opt Dado Válido
-            Note right of ModuloSensores: Condição: Dado processado é válido
-            ModuloSensores-->>+SistemaControle: reportarDadoProducao(idSensor, valorProcessado, timestamp)
-            SistemaControle->>SistemaControle: atualizarStatusEquipamentosETanques(dado)
-            SistemaControle->>+BancoDeDados: logDadoProducao(dado)
-            BancoDeDados-->>-SistemaControle: logConfirmado
-            SistemaControle-->>UI_Central_Operador: atualizarVisualizacaoAndamentoProducao(dadosStatusAtualizados)
-        end
-
-        opt Falha nos sensores (FS001)
-            Note right of ModuloSensores: Condição: Foi detectada uma falha no sensor durante o processamento
-            ModuloSensores->>ModuloSensores: detectarFalhaSensor(idSensor, tipoErro) // Simulado se a condição de falha ocorrer
-            ModuloSensores-->>+SistemaControle: reportarFalhaSensor(idSensor, tipoErro)
-            SistemaControle->>SistemaControle: registrarAlertaFalha(idSensor)
-            SistemaControle-->>UI_Central_Operador: exibirAlertaFalhaNoSensor(idSensor, tipoErro)
-        end
+    Sensores->>Sistema_de_Controle: Captura e envia dados do processo [FS001]
+    loop Periódico
+        Sensores->>Sistema_de_Controle: Envia dados (pressão, nível)
     end
+    Sistema_de_Controle->>Sistema_de_Controle: Atualiza status dos tanques e equipamentos
+    Sistema_de_Controle-->>Operador: Exibe andamento da produção em tempo real
+
+    alt FS001 - Falha nos sensores
+        Sensores-->>Sistema_de_Controle: Falha na transmissão de dados
+        Sistema_de_Controle-->>Operador: Exibe alerta de falha no sensor
+    end
+
+
 ```
+
+## 📈 Diagrama de Estados
+
 ### 1️⃣ Operador
 ```mermaid
 stateDiagram-v2
