@@ -121,10 +121,17 @@ classDiagram
     class Operador{
         String e-mail
         String senha
+        IniciaProducao()
         EmiteRelatorio()
         ReverteOperacao()
         LiberaCaminhao()
         MonitoraOperacao()
+    }
+
+    class CentralDeMonitoramento{
+        int capacidade
+        autorizaOperador()
+        recusaLogin()
     }
 
     class Misturador {
@@ -170,6 +177,8 @@ classDiagram
     class SistemaComercial {
         informarDemanda()
     }
+    class
+
 ```
 
 ## 📌 Diagrama de Sequência
@@ -348,65 +357,31 @@ sequenceDiagram
 
 ### 1️⃣ Operador
 ```mermaid
-stateDiagram-v2
-
-    [*] --> AguardandoAcessoDoOperador
-    AguardandoAcessoDoOperador --> ExibindoTelaDeLogin : [tentativa de acesso]
-    ExibindoTelaDeLogin --> ValidandoCredenciaisComSistema : [credenciais fornecidas]
-    ValidandoCredenciaisComSistema --> ExibindoPainelDeMonitoramento : [login OK, dados carregados do Sistema Controle]
-    ExibindoPainelDeMonitoramento --> RecebendoComandoDoOperador : [Operador interage reverter, liberar, gerar relatório, etc.]
-    ExibindoPainelDeMonitoramento --> AtualizandoPainelComNovosDadosDeSensor : [Sistema Controle envia atualização]
-    ExibindoPainelDeMonitoramento --> ExibindoAlertaDeSistema : [Sistema Controle envia alerta]
-
-    RecebendoComandoDoOperador --> EnviandoSolicitacaoAoSistemaControle : [ex solicitarReversao, liberarTanque, gerarRelatorio]
-    EnviandoSolicitacaoAoSistemaControle --> ExibindoRespostaDoSistemaControle : [confirmação, erro, dados de relatório]
-    ExibindoRespostaDoSistemaControle --> ExibindoPainelDeMonitoramento : [interação concluída]
-
-    AtualizandoPainelComNovosDadosDeSensor --> ExibindoPainelDeMonitoramento
-    ExibindoAlertaDeSistema --> ExibindoPainelDeMonitoramento : [após reconhecimento ou ação]
-    ExibindoPainelDeMonitoramento --> [*] : [logout ou fim da sessão]
+stateDiagram
+    [*] --> IniciaProducao() : Se login e senha estiverem corretos
+    IniciaProducao() --> MonitoraOperacao() : Se a operacao tiver sido iniciada
+    MonitoraOperacao() --> LiberarCaminhao() : Se estiver tudo certo
+    MonitoraOperacao() --> ReverterOperacao() : Se acontecer algum empecilho
+    ReverterOperacao() --> IniciaProducao()
+    LiberarCaminhao() --> GerarRelatorios() : Caminhões abastecidos
+    LiberarCaminhao() -->  MonitoraOperacao : Caminhçao sem o carregamento completo
+    GerarRelatorios() --> [*]
 ```
-### 2️⃣ Sistema PCP
-```mermaid
-stateDiagram-v2
-    [*] --> IdentificandoNecessidadeDeProducaoDeTinta
-    IdentificandoNecessidadeDeProducaoDeTinta --> CompilandoDadosDaOrdem : [Produto, Quantidade, Especificações, Prazo]
-    CompilandoDadosDaOrdem --> FormatandoRequisicaoParaSistemaDeControleTintas
-    FormatandoRequisicaoParaSistemaDeControleTintas --> EnviandoOrdemViaAPIDoSistemaDeControleTintas
-    EnviandoOrdemViaAPIDoSistemaDeControleTintas --> AguardandoConfirmacaoDeRecebimentoDaOrdem
-    AguardandoConfirmacaoDeRecebimentoDaOrdem --> RegistrandoConfirmacaoOuFalhaDoEnvio : [Resposta da API recebida]
-    RegistrandoConfirmacaoOuFalhaDoEnvio --> [*] : [Processo de envio de ordem concluído]
-```
+
 ### 3️⃣ Central de Monitoramento
 ```mermaid
-stateDiagram-v2
-
-    [*] --> ApresentandoInterfaceDeLogin
-    ApresentandoInterfaceDeLogin --> ValidandoAutenticacaoComSistemaControle : [Operador insere credenciais]
-    ValidandoAutenticacaoComSistemaControle --> ExibindoPainelOperacionalPrincipal : [Autenticação OK]
-    ValidandoAutenticacaoComSistemaControle --> ApresentandoInterfaceDeLogin : [Falha na autenticação]
-
-    ExibindoPainelOperacionalPrincipal --> RecebendoAcaoDoOperador : [Operador interage com o painel]
-    ExibindoPainelOperacionalPrincipal --> AtualizandoDisplayComNovosDados : [Dados/alertas chegam do Sistema Controle]
-
-    RecebendoAcaoDoOperador --> EnviandoComandoParaSistemaControle : [Ação requer processamento pelo backend]
-    EnviandoComandoParaSistemaControle --> ExibindoRespostaDoSistemaNoPainel : [Sistema Controle responde ao comando]
-    ExibindoRespostaDoSistemaNoPainel --> ExibindoPainelOperacionalPrincipal : [Interação concluída]
-
-    AtualizandoDisplayComNovosDados --> ExibindoPainelOperacionalPrincipal : [Painel atualizado]
-
-    ExibindoPainelOperacionalPrincipal --> [*] : [Logout ou fim de sessão]
+stateDiagram
+    [*] --> : Se a credencial estiver correta
+    
 ```
 ### 4️⃣ Sistema Comercial
 ```mermaid
-stateDiagram-v2
-    [*] --> PreparandoEnvioDeDemanda
-    PreparandoEnvioDeDemanda --> EnviandoRequisicaoParaAPIGateway : [dados da demanda produto, qtd, prazo]
-    EnviandoRequisicaoParaAPIGateway --> AguardandoRespostaDaAPIDoSistemaTintas
-    AguardandoRespostaDaAPIDoSistemaTintas --> RecebendoConfirmacaoOuErro : [resposta da API]
-    RecebendoConfirmacaoOuErro --> ProcessoDeEnvioConcluido : [demanda registrada ou falha comunicada]
-    ProcessoDeEnvioConcluido --> [*]
-```
+stateDiagram
+    [*] --> InformarDemanda() : Se a quantidade da demanda for estabelecida
+    InformarDemanda() --> [*]
+
+``` 
+
 ### 5️⃣ Sistema Controle Tintas
 ```mermaid
 stateDiagram-v2
