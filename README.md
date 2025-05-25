@@ -83,6 +83,31 @@ Abaixo, detalhamos cada caso de uso, mostrando o fluxo principal, fluxos alterna
 
 classDiagram
 
+    Operador --> Pessoa
+
+    Operador --> Misturador : controla
+    Operador --> Tanque : monitora
+    Operador --> Valvula : opera
+    Operador --> Bomba : controla
+    Operador --> Sensor : consulta
+
+    Misturador --> Tanque : mistura no
+    Misturador --> Tinta : usa
+
+    Tanque --> Tinta : armazena
+    Tanque --> Sensor : usa
+
+    Bomba --> Tanque : alimenta/esvazia
+    Valvula --> Tanque : regula entrada/saída
+
+    Sensor --> Tanque : mede
+    Sensor --> Bomba : mede
+    Sensor --> Valvula : mede
+
+    PCP --> Operador : envia ordem
+    PCP --> Misturador : ativa mistura
+
+    SistemaComercial --> PCP : informa demanda
 
     class Pessoa {
         String nome
