@@ -84,6 +84,7 @@ Abaixo, detalhamos cada caso de uso, mostrando o fluxo principal, fluxos alterna
 classDiagram
 
     Operador --> Pessoa
+    Operador --> CentralDeMonitoramento : opera
 
     Operador --> Misturador : controla
     Operador --> Tanque : monitora
@@ -138,31 +139,37 @@ classDiagram
         String ID
         Boolean ativo
         MisturaCor()
+        RetornaErro()
     }
 
     class Bomba {
         String ID
         ControlaVazao()
+        RetornaErro()
     }
 
     class Valvula {
         Boolean vazamento
         Boolean ativo
         AbreFecha()
+        RetornaErro()
+
     }
 
     class Tanque {
         String ID
         float nivel
-        armazenar()
-        esvaziar()
+        Armazenar()
+        Esvaziar()
+        AjusteVazamento()
     }
 
     class Sensor {
         float pressao
         float nivel
         float valor
-        lerValor()
+        LerValor()
+        RetornarErro()
     }
 
     class Tinta {
@@ -171,13 +178,12 @@ classDiagram
     }
 
     class PCP {
-        enviaOrdemProducao()
+        EnviaOrdemProducao()
     }
 
     class SistemaComercial {
-        informarDemanda()
+        InformarDemanda()
     }
-    class
 
 ```
 
@@ -190,7 +196,6 @@ classDiagram
 5. Informar Demanda de Produção
 6. Enviar ordens de produção
 7. Enviar dados de produção
-
 
 ### 1️⃣ Operador que Monitorar Operação
 
@@ -368,12 +373,26 @@ stateDiagram
     GerarRelatorios() --> [*]
 ```
 
-### 3️⃣ Central de Monitoramento
+### 2️⃣ Central de Monitoramento
 ```mermaid
 stateDiagram
-    [*] --> : Se a credencial estiver correta
+    [*] --> autorizaOperacao() : Se a credencial estiver correta
+    [*] --> recusaLogin() : Se a credencial estiver incorreta
+    autorizaOperacao() --> [*]
     
 ```
+
+### 3️⃣ Misturador
+
+```mermaid
+stateDiagram
+    [*] --> MisturaCor()
+    MisturaCor() --> [*] : Mistura concluída
+    MisturaCor() --> RetornaErro() : Falha na mistura
+    RetornaErro() --> MisturaCor() : Após reparo
+    
+```
+
 ### 4️⃣ Sistema Comercial
 ```mermaid
 stateDiagram
@@ -382,36 +401,63 @@ stateDiagram
 
 ``` 
 
-### 5️⃣ Sistema Controle Tintas
+### 5️⃣ Bomba
 ```mermaid
-stateDiagram-v2
-    [*] --> Ocioso_AguardandoEntrada
-
-    Ocioso_AguardandoEntrada --> RecebendoDadosExternos : [Nova ordem do PCP/Comercial (UC_05) ou Dados de Sensores (UC_07)]
-    Ocioso_AguardandoEntrada --> RecebendoComandoDaCentralMonitoramento : [Operador solicita ação via UI (UC_01, UC_02, UC_03, UC_04, Seq. Iniciar Prod.)]
-
-    RecebendoDadosExternos --> ProcessandoDadosRecebidos : [Validar ordem, registrar dados de sensor]
-    ProcessandoDadosRecebidos --> AtualizandoEstadoInterno_E_NotificandoUI : [Ordem na fila, painel atualizado com dados de sensor]
-    AtualizandoEstadoInterno_E_NotificandoUI --> Ocioso_AguardandoEntrada
-
-    RecebendoComandoDaCentralMonitoramento --> ValidandoEProcessandoComandoOperador : [Verificar permissões, estado da linha]
-    ValidandoEProcessandoComandoOperador --> ExecutandoAcaoRequisitada : [Iniciar/Parar produção, abrir/fechar válvula, gerar dados de relatório]
-    ExecutandoAcaoRequisitada --> EnviandoRespostaOuConfirmacaoParaCentralMonitoramento
-    EnviandoRespostaOuConfirmacaoParaCentralMonitoramento --> Ocioso_AguardandoEntrada : [Comando concluído]
-
-    Ocioso_AguardandoEntrada --> [*] : [Desligamento do sistema, não usual]
+stateDiagram
+    [*] --> ControlaVazao()
+    ControlaVazao() --> [*] : "Operação normal"
+    ControlaVazao() --> RetornaErro() : "Vazão crítica"
+    RetornaErro() --> ControlaVazao() : "Após ajuste"
 ```
 
-### 6️⃣ Módulo Interface Sensores
+### 6️⃣ Válvula
 ```mermaid
+stateDiagram
+    [*] --> AbreFecha()
+    AbreFecha() --> [*] : "Operação concluída"
+    AbreFecha() --> RetornaErro() : "Vazamento detectado"
+    RetornaErro() --> AbreFecha() : "Após reparo"
+```
+
+### 7️⃣ Tanque
+```mermaid
+stateDiagram
+    [*] --> Armazenar() : Se a válvula estiver aberta
+    Armazenar() --> Esvaziar() : "Tanque cheio"
+    Esvaziar() --> [*] : "Tanque vazio"
+    Armazenar() --> AjusteVazamento() : "Vazamento"
+    RetornaErro() --> Armazenar() : "Após reparo"
+```
+
+### 8️⃣ PCP
+
+```mermaid
+stateDiagram
+    [*] --> EnviaOrdemProducao() : Se existir demanda
+    EnviaOrdemProducao() --> [*]
+```
+
+### 8️⃣ PCP
+
+```mermaid
+stateDiagram
+    [*] --> EnviaOrdemProducao() : Se existir demanda
+    EnviaOrdemProducao() --> [*]
+```
+### 9️⃣ Sensor
+
 stateDiagram-v2
-    [*] --> RecebendoDadoBrutoDoHardwareSensor
-    RecebendoDadoBrutoDoHardwareSensor --> ProcessandoDadoBrutoSensor : [validação, conversão, etc.]
-    ProcessandoDadoBrutoSensor --> ReportandoDadoProcessadoAoSistemaControle : [dado válido]
-    ProcessandoDadoBrutoSensor --> ReportandoFalhaDeLeituraAoSistemaControle : [erro na leitura/processamento]
-    ReportandoDadoProcessadoAoSistemaControle --> AguardandoProximoCicloDeLeitura
-    ReportandoFalhaDeLeituraAoSistemaControle --> AguardandoProximoCicloDeLeitura
-    AguardandoProximoCicloDeLeitura --> [*]
+    [*] --> LerValor()
+    LerValor() --> [*] : "Valor normal"
+    LerValor() --> RetornaErro() : "Valor crítico"
+    RetornaErro() --> LerValor() : "Após normalização"
+
+```mermaid
+stateDiagram
+    [*] --> LerValor()
+    LerValor() --> [*] : "Valor normal"
+    LerValor() --> RetornaErro() : "Valor crítico"
+    RetornaErro() --> LerValor() : "Após normalização"
 ```
 ## 🎱 Diagramas de Atividades
 ### Interface de Produção
