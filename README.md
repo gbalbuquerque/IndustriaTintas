@@ -18,6 +18,9 @@ Uma equipe dedicada a transformar o controle de locações da VL!
 
 Uma indústria de produção em massa de tintas, nos contratou para modernizar sua gestão!  Atualmente, a empresa opera com processos manuais e registros em fichas.  Nosso desafio é criar um sistema que automatize e otimize todas as etapas da produção.
 
+[Link do wiki detalhado](https://github.com/gbalbuquerque/IndustriaTintas.wiki.git)
+
+
 ## 🚀 Diagrama de Casos de Uso
 
 Este diagrama mostra as principais funcionalidades do sistema e como os diferentes atores interagem com ele:
