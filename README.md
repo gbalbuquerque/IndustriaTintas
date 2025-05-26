@@ -304,7 +304,7 @@ sequenceDiagram
         Sistema->>Operador: Exibe relatório
         Operador->>Sistema: Solicita exportação em PDF/CSV
         Sistema->>Operador: Disponibiliza arquivo para download
-    else [FS001] Filtros inválidos ou sem resultado
+    else Filtros inválidos ou sem resultado
         Sistema->>Operador: Exibe mensagem de que não há dados
     end
 
@@ -353,7 +353,7 @@ sequenceDiagram
     Sistema_de_Controle->>Sistema_de_Controle: Atualiza status dos tanques e equipamentos
     Sistema_de_Controle-->>Operador: Exibe andamento da produção em tempo real
 
-    alt FS001 - Falha nos sensores
+    alt - Falha nos sensores
         Sensores-->>Sistema_de_Controle: Falha na transmissão de dados
         Sistema_de_Controle-->>Operador: Exibe alerta de falha no sensor
     end
@@ -460,55 +460,8 @@ stateDiagram
 ### Liberação de Caminhões
 <img src='Diagrama1Atv.png'>
 
-### Processo de esvaziation
-```mermaid
-graph TD
-    start_esvaziamento([Início - Necessidade de Esvaziar Tanque])
-
-    subgraph "Operador (Central de Monitoramento)"
-        opD1[Identifica Tanque com produto pronto para esvaziar]
-        opD2[Verifica se caminhão está posicionado/disponível]
-        opD3[Comanda Liberação do Tanque para Esvaziamento via Central]
-        opD4[Monitora nível do tanque durante esvaziamento]
-        opD5[Confirma finalização do esvaziamento ou interrupção]
-    end
-
-    subgraph "Sistema de Controle da Linha de Tintas"
-        sysE1[Recebe comando de Liberação de Tanque da Central]
-        sysE2[Verifica status do tanque - nível, tipo de produto]
-        sysE3[Comanda abertura da válvula de saída do tanque selecionado]
-        sysE4[Envia dados de nível do tanque para Central de Monitoramento]
-        sysE5{"Tanque Vazio ou Caminhão Cheio?"}
-        sysE6[Comanda fechamento da válvula de saída do tanque]
-        sysE7[Registra esvaziamento e atualiza status do tanque]
-        sysE8[Notifica Central sobre finalização/status]
-    end
-
-    subgraph "Logística/Caminhão (Entidade Externa)"
-        logF1[Caminhão se posiciona para carregamento]
-        logF2[Inicia recebimento de tinta]
-        logF3[Sinaliza que está cheio ou que o tanque esvaziou]
-    end
-
-    start_esvaziamento --> opD1
-    opD1 --> opD2
-    opD2 --> logF1
-    logF1 --> opD3
-    opD3 --> sysE1
-    sysE1 --> sysE2
-    sysE2 --> sysE3
-    sysE3 --> logF2
-    logF2 --> opD4
-    sysE3 --> sysE4
-    sysE4 --> opD4
-    opD4 --> sysE5
-    sysE5 -- Sim --> sysE6
-    sysE6 --> sysE7
-    sysE7 --> sysE8
-    sysE8 --> opD5
-    logF3 --> opD5
-    opD5 --> end_esvaziado([Fim - Esvaziamento Concluído/Interrompido])
-```
+### Produção de Tinta
+<img src='Diagrama2Atv.png'>
 
 ## 🖥️ Diagramas de Componentes e Integração
 ```mermaid
