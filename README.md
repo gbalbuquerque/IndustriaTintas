@@ -440,13 +440,6 @@ stateDiagram
     EnviaOrdemProducao() --> [*]
 ```
 
-### 8️⃣ PCP
-
-```mermaid
-stateDiagram
-    [*] --> EnviaOrdemProducao() : Se existir demanda
-    EnviaOrdemProducao() --> [*]
-```
 ### 9️⃣ Sensor
 
 ```mermaid
