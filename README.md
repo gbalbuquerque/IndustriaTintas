@@ -530,8 +530,3 @@ graph TD
 
 ---
 
-## 🤝 Contribuições
-Contribuições para aprimorar este projeto são muito bem-vindas, forke o projeto e contribua!
-
-## ✉️ Contato
-Qualquer dúvida sobre o projeto entrar em contato, será um prazer!
